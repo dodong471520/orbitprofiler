@@ -241,7 +241,7 @@ void DrawWindow( State& state, ImVec2& popupPos, ImVec2& popupSize, bool& isFocu
         winFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
     /// Begin main window
-    ImGui::SetNextWindowSize( ImVec2( 640, 480 ), ImGuiSetCond_FirstUseEver );
+    ImGui::SetNextWindowSize( ImVec2( 640, 480 ), ImGuiCond_FirstUseEver );
     if( !ImGui::Begin( "DeveloperConsole", nullptr, winFlags ) )
     {
         ImGui::End();
@@ -411,12 +411,12 @@ void RuleEditorWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size )
         ImVec2 CanvasSize = *a_Size;
         CanvasSize.x -= 20;
         CanvasSize.y -= 20;
-        ImGui::SetNextWindowSize( CanvasSize, ImGuiSetCond_Always );
+        ImGui::SetNextWindowSize( CanvasSize, ImGuiCond_Always );
         ImGui::Begin( title, p_opened, CanvasSize, 1.f, m_WindowFlags );
     }
     else
     {
-        ImGui::SetNextWindowSize( ImVec2( 500, 400 ), ImGuiSetCond_FirstUseEver );
+        ImGui::SetNextWindowSize( ImVec2( 500, 400 ), ImGuiCond_FirstUseEver );
         ImVec2 size( 400, 400 );
         ImGui::Begin( title, p_opened, size, 1.f, m_WindowFlags );
     }
