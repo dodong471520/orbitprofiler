@@ -1210,6 +1210,7 @@ void OrbitApp::OnRemoteModuleDebugInfo(const Message & a_Message)
             }
 
             module->m_Pdb->ProcessData();
+            module->SetLoaded(true);
         }
     }
 
