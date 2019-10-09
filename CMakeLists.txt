@@ -79,9 +79,12 @@ find_library(BREAKPAD_LIB liblibbreakpad.a)
 PrintVars(BREAKPAD_LIB)
 endif()
 
+# 64 bits
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 #pkg_check_modules(GLEW glew REQUIRED)
 find_package(glew REQUIRED)
 PrintVars(GLEW)
+endif()
 
 #find_package(imgui REQUIRED)
 find_path(IMGUI_INCLUDE_DIR imgui.h) 
