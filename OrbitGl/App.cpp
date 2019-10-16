@@ -197,7 +197,7 @@ void OrbitApp::LoadSystrace(const std::string& a_FileName)
 
     for (Function & func : systrace->GetFunctions())
     {
-        Capture::GSelectedFunctionsMap[func.m_Address] = &func;
+        Capture::GSelectedFunctionsMap[func.GetVirtualAddress()] = &func;
     }
     Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
@@ -225,7 +225,7 @@ void OrbitApp::AppendSystrace(const std::string& a_FileName, uint64_t a_TimeOffs
 
     for (Function& func : systrace->GetFunctions())
     {
-        Capture::GSelectedFunctionsMap[func.m_Address] = &func;
+        Capture::GSelectedFunctionsMap[func.GetVirtualAddress()] = &func;
     }
     Capture::GVisibleFunctionsMap = Capture::GSelectedFunctionsMap;
 
