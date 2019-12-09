@@ -10,6 +10,7 @@
 
 #ifdef __linux
 #include "LinuxUtils.h"
+#include "LinuxEventTracer.h"
 #endif
 
 #include <set>
@@ -56,11 +57,11 @@ public:
     }
 
     //-----------------------------------------------------------------------------
-    void AddCallstackEvent( long long a_Time, CallStack & a_CallStack )
+    void AddCallstackEvent( long long a_Time, CallstackID a_CSHash, ThreadID a_TID )
     {
         ScopeLock lock( m_Mutex );
-        std::map< long long, CallstackEvent > & threadMap = m_CallstackEvents[ a_CallStack.m_ThreadId ];
-        threadMap[a_Time] = CallstackEvent( a_Time, a_CallStack.Hash(), a_CallStack.m_ThreadId );
+        std::map< long long, CallstackEvent > & threadMap = m_CallstackEvents[ a_TID ];
+        threadMap[a_Time] = CallstackEvent( a_Time, a_CSHash, a_TID );
         RegisterTime( a_Time );
     }
 
@@ -81,6 +82,7 @@ struct EventTracer
     void Start(uint32_t a_PID);
     void Stop();
     std::shared_ptr<LinuxPerf> m_Perf;
+    std::shared_ptr<LinuxEventTracer> m_EventTracer;
 };
 
 extern EventTracer GEventTracer;

@@ -11,6 +11,7 @@
 #include <set>
 #include <map>
 #include <memory>
+#include <vector>
 #include "Serialization.h"
 #include "OrbitModule.h"
 
@@ -146,6 +147,42 @@ std::multimap<int, CallstackID> SamplingProfiler::GetCallStacksFromAddress( uint
 }
 
 //-----------------------------------------------------------------------------
+void SamplingProfiler::AddCallStack( CallStack & a_CallStack )
+{
+    CallstackID hash = a_CallStack.Hash();
+    if (!HasCallStack( hash ))
+    {
+        AddUniqueCallStack( a_CallStack );
+    }
+    HashedCallStack hashedCS;
+    hashedCS.m_Hash = hash;
+    hashedCS.m_Depth = a_CallStack.m_Depth;
+    hashedCS.m_ThreadId = a_CallStack.m_ThreadId;
+    AddHashedCallStack ( hashedCS );
+}
+
+//-----------------------------------------------------------------------------
+void SamplingProfiler::AddHashedCallStack( HashedCallStack & a_CallStack )
+{
+    if (m_State != Sampling) {
+        PRINT("Error: Callstacks can only be added while sampling.\n");
+    }
+    if ( !HasCallStack(a_CallStack.m_Hash) )
+    {
+        PRINT("Error: Callstacks can only be added by hash when they are already present.\n");
+    }
+    ScopeLock lock(m_Mutex);
+    m_Callstacks.push_back( a_CallStack );
+}
+
+//-----------------------------------------------------------------------------
+void SamplingProfiler::AddUniqueCallStack( CallStack & a_CallStack )
+{
+    ScopeLock lock(m_Mutex);
+    m_UniqueCallstacks[a_CallStack.Hash()] = std::make_shared<CallStack>(a_CallStack);
+}
+
+//-----------------------------------------------------------------------------
 std::shared_ptr< SortedCallstackReport > SamplingProfiler::GetSortedCallstacksFromAddress( uint64_t a_Addr, ThreadID a_TID )
 {
     std::shared_ptr<SortedCallstackReport> report = std::make_shared<SortedCallstackReport>();
@@ -223,6 +260,7 @@ bool SamplingProfiler::GetLineInfo( uint64_t a_Address, LineInfo & a_LineInfo )
 //-----------------------------------------------------------------------------
 void SamplingProfiler::Print()
 {
+    ScopeLock lock(m_Mutex);
 	for( auto & pair : m_UniqueCallstacks )
 	{
 		std::shared_ptr<CallStack> callstack = pair.second;
@@ -249,18 +287,17 @@ void SamplingProfiler::ProcessSamplesAsync()
 //-----------------------------------------------------------------------------
 void SamplingProfiler::ProcessSamples()
 {
+    ScopeLock lock(m_Mutex);
     unsigned int numAddressesTotal = 0;
 
     m_State = Processing;
 
     // Unique call stacks and per thread data
-    for( CallStack & callstack : m_Callstacks )
+    for( const HashedCallStack& callstack : m_Callstacks )
     {
-        callstack.Hash();
-        auto it = m_UniqueCallstacks.find( callstack.m_Hash );
-        if( it == m_UniqueCallstacks.end() )
+        if ( !HasCallStack(callstack.m_Hash) )
         {
-            m_UniqueCallstacks[callstack.m_Hash] = std::make_shared<CallStack>(callstack);
+            PRINT("Error: Processed unknown callstack!\n");
         }
 
         ThreadSampleData & threadSampleData = m_ThreadSampleData[callstack.m_ThreadId];
@@ -321,9 +358,12 @@ void SamplingProfiler::ProcessSamples()
 
     OutputStats();
 
-    m_NumSamples = m_Callstacks.size();
-    m_Callstacks.clear();
-    m_State = DoneProcessing;
+    {
+        ScopeLock lock(m_Mutex);
+        m_NumSamples = m_Callstacks.size();
+        m_Callstacks.clear();
+        m_State = DoneProcessing;
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -365,6 +405,7 @@ std::multimap< int, CallstackID > ThreadSampleData::SortCallstacks( const std::s
 //-----------------------------------------------------------------------------
 void SamplingProfiler::ProcessAddresses()
 {
+    ScopeLock lock(m_Mutex);
     for( const auto & it : m_UniqueCallstacks )
     {
         CallstackID rawCallstackId = it.first;
@@ -402,7 +443,7 @@ void SamplingProfiler::ProcessAddresses()
 //-----------------------------------------------------------------------------
 void SamplingProfiler::AddAddress(uint64_t a_Address)
 {
-    ScopeLock lock(m_SymbolMutex);
+    ScopeLock lock(m_Mutex);
 #ifdef _WIN32
     
     if( !m_IsLinuxPerf )
@@ -528,7 +569,7 @@ void SamplingProfiler::GetThreadCallstack( Thread* a_Thread )
     {
         frame.m_Callstack.m_Depth = depth;
         frame.m_Callstack.m_ThreadId = a_Thread->m_TID;
-        m_Callstacks.push_back( frame.m_Callstack );
+        AddCallStack( frame.m_Callstack );
     }
 #endif
 }
@@ -536,7 +577,7 @@ void SamplingProfiler::GetThreadCallstack( Thread* a_Thread )
 //-----------------------------------------------------------------------------
 std::wstring SamplingProfiler::GetSymbolFromAddress( uint64_t a_Address )
 {
-    ScopeLock lock( m_SymbolMutex );
+    ScopeLock lock( m_Mutex );
 
     auto it = m_AddressToSymbol.find( a_Address );
     if( it != m_AddressToSymbol.end() )

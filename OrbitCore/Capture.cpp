@@ -24,6 +24,8 @@
 #include "OrbitRule.h"
 #include "CoreApp.h"
 #include "TestRemoteMessages.h"
+#include "Serialization.h"
+
 #include <fstream>
 #include <ostream>
 
@@ -48,6 +50,7 @@ bool        Capture::GHasContextSwitches;
 Timer       Capture::GTestTimer;
 ULONG64     Capture::GMainFrameFunction;
 ULONG64     Capture::GNumContextSwitches;
+ULONG64     Capture::GNumLinuxEvents;
 ULONG64     Capture::GNumProfileEvents;
 int         Capture::GCapturePort = 0;
 std::wstring Capture::GCaptureHost = L"localhost";
@@ -200,6 +203,13 @@ bool Capture::StartCapture()
         GEventTracer.Start(GTargetProcess->GetID());
 #endif
     }
+    else if ( Capture::IsRemote() )
+    {
+        LinuxPerf perf(0);
+        Capture::NewSamplingProfiler();
+        Capture::GSamplingProfiler->SetIsLinuxPerf(true);
+        Capture::GSamplingProfiler->StartCapture();
+    }
 
     GCoreApp->SendToUiNow( L"startcapture" );
     
@@ -217,6 +227,12 @@ void Capture::StopCapture()
     if( IsTrackingEvents() )
     {
         GEventTracer.Stop();
+    }
+    else if ( Capture::IsRemote() )
+    {        
+        Capture::GSamplingProfiler->StopCapture();
+        Capture::GSamplingProfiler->ProcessSamples();
+        GCoreApp->RefreshCaptureView();
     }
 
     if (!GInjected)
@@ -253,6 +269,8 @@ void Capture::ClearCaptureData()
     GTcpServer->ResetStats();
     GOrbitUnreal.NewSession();
     GHasContextSwitches = false;
+    GNumLinuxEvents = 0;
+    GNumContextSwitches = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -333,6 +351,17 @@ void Capture::SendFunctionHooks()
 
     if (Capture::IsRemote())
     {
+        std::vector<std::string> selectedFunctions;
+        for (auto& pair : GSelectedFunctionsMap)
+        {
+            PRINT("Send Selected Function: %s\n", pair.second->m_PrettyName.c_str());
+            selectedFunctions.push_back(std::to_string(pair.first));
+        }
+
+        std::string selectedFunctionsData = SerializeObjectHumanReadable(selectedFunctions);
+        PRINT_VAR(selectedFunctionsData);
+        GTcpClient->Send(Msg_RemoteSelectedFunctionsMap, (void*)selectedFunctionsData.data(), selectedFunctionsData.size());
+
         BpfTrace bpfTrace;
         PRINT_VAR(bpfTrace.GetBpfScript());
         GTcpClient->Send(Msg_BpfScript, bpfTrace.GetBpfScript());
@@ -599,7 +628,7 @@ void Capture::NewSamplingProfiler()
 bool Capture::IsTrackingEvents()
 {
 #ifdef __linux
-    return true;
+    return !IsRemote();
 #else
     static bool yieldEvents = false;
     if( yieldEvents && IsOtherInstanceRunning() && GTargetProcess )
