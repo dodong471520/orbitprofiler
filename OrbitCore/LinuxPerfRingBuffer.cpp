@@ -10,7 +10,7 @@
 #include "LinuxPerfUtils.h"
 
 #include <assert.h>
-#include <linux/perf_event.h>
+#include "PerfEvent.h"
 #include <sys/mman.h>
 
 //-----------------------------------------------------------------------------

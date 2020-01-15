@@ -8,7 +8,7 @@
 #pragma once
 
 #include "LinuxPerfUtils.h"
-#include <linux/perf_event.h>
+#include "PerfEvent.h"
 #include <assert.h>
 
 class LinuxPerfRingBuffer

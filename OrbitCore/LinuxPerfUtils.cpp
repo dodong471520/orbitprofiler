@@ -11,7 +11,7 @@
 #include "LinuxPerfUtils.h"
 #include "ScopeTimer.h"
 
-#include <linux/perf_event.h>
+#include "PerfEvent.h"
 #include <linux/version.h>
 #include <sys/errno.h>
 

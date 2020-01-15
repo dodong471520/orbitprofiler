@@ -22,7 +22,7 @@
 #include "LinuxPerfUtils.h"
 #include "OrbitFunction.h"
 #include "Pdb.h"
-#include <linux/perf_event.h>
+#include "PerfEvent.h"
 #include <linux/version.h>
 #include <map>
 #include <vector>

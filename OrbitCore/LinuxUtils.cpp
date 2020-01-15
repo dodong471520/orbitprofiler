@@ -27,7 +27,7 @@
 #include <sys/syscall.h>
 #include <sys/utsname.h>
 #include <linux/types.h>
-#include <linux/perf_event.h>
+#include "PerfEvent.h"
 #include <linux/version.h>
 #include <asm/unistd.h>
 #include <sys/mman.h>

@@ -9,7 +9,7 @@
 
 #include <asm/unistd.h>
 #include <asm/perf_regs.h>
-#include <linux/perf_event.h>
+#include "PerfEvent.h"
 #include <linux/version.h>
 #include <sys/errno.h>
 #include <sys/ioctl.h>
