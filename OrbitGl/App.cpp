@@ -299,7 +299,8 @@ void OrbitApp::ProcessHashedSamplingCallStack(CallstackEvent& a_CallStack)
         ScopeLock lock( m_HashedSamplingCallstackMutex );
         m_HashedSamplingCallstackBuffer.push_back(a_CallStack);
     }
-    Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
+    if( Capture::GSamplingProfiler )
+        Capture::GSamplingProfiler->AddHashedCallStack(a_CallStack);
     GEventTracer.GetEventBuffer().AddCallstackEvent( a_CallStack.m_Time, a_CallStack.m_Id, a_CallStack.m_TID );
 }
 
@@ -1117,8 +1118,11 @@ void OrbitApp::StartCapture()
 #else
     if( Capture::StartCapture() )
     {
-        m_BpfTrace = std::make_shared<BpfTrace>();
-        m_BpfTrace->Start();
+        if( !Capture::IsRemote() )
+        {
+            m_BpfTrace = std::make_shared<BpfTrace>();
+            m_BpfTrace->Start();
+        }
     }
 #endif
 
