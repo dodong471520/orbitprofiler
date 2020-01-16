@@ -58,8 +58,10 @@ namespace LinuxPerfUtils
 
     inline void start_capturing(uint32_t a_FileDescriptor)
     {
-        ioctl(a_FileDescriptor, PERF_EVENT_IOC_RESET, 0);
-        ioctl(a_FileDescriptor, PERF_EVENT_IOC_ENABLE, 0);
+        PRINT_FUNC;
+        PRINT_VAR(a_FileDescriptor);
+        PRINT_VAR(ioctl(a_FileDescriptor, PERF_EVENT_IOC_RESET, PERF_IOC_FLAG_GROUP));
+        PRINT_VAR(ioctl(a_FileDescriptor, PERF_EVENT_IOC_ENABLE, PERF_IOC_FLAG_GROUP));
     }
 
     inline void stop_capturing(uint32_t a_FileDescriptor)
