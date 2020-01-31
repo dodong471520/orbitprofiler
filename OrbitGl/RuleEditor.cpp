@@ -653,6 +653,10 @@ void RuleEditor::OnReceiveMessage( const Message & a_Message )
         DWORD64 address = a_Message.m_Header.m_GenericHeader.m_Address;
 
         std::shared_ptr<Rule> rule = m_Rules[address];
+		if (!rule.get())
+		{
+			return;
+		}
         int offset = 0;
         const char* maxAddress = a_Message.GetData() + a_Message.m_Size;
         for( const std::shared_ptr<Variable > var : rule->m_TrackedVariables )

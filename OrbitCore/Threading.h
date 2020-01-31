@@ -48,27 +48,31 @@ typedef struct tagTHREADNAME_INFO
 //-----------------------------------------------------------------------------
 inline void SetThreadName(HANDLE a_Thread, const wchar_t* a_ThreadName)
 {
-    SetThreadDescription(a_Thread, a_ThreadName);
+    //SetThreadDescription(a_Thread, a_ThreadName);
 }
 
 //-----------------------------------------------------------------------------
 inline void SetCurrentThreadName( const wchar_t* a_ThreadName)
 {
-    SetThreadDescription(GetCurrentThread(), a_ThreadName);
+    //SetThreadDescription(GetCurrentThread(), a_ThreadName);
 }
 
 //-----------------------------------------------------------------------------
 inline std::wstring GetThreadName(HANDLE a_Thread)
 {
-    std::wstring name;
-    PWSTR data = nullptr;
-    HRESULT hr = GetThreadDescription(a_Thread, &data);
-    
-    if (SUCCEEDED(hr)) 
-    {
-        name = data;
-        LocalFree(data);
-    }
+    //std::wstring name;
+    //PWSTR data = nullptr;
+    //HRESULT hr = GetThreadDescription(a_Thread, &data);
+    //
+    //if (SUCCEEDED(hr)) 
+    //{
+    //    name = data;
+    //    LocalFree(data);
+    //}
+
+	wchar_t buff[1024];
+	wsprintf(buff, L"thread %d", ::GetCurrentThreadId());
+	std::wstring name = buff;
 
     return name;
 }

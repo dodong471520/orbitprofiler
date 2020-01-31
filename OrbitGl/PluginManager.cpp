@@ -14,7 +14,7 @@ void PluginManager::Initialize()
 {
 #ifdef _WIN32
     std::wstring dir = Path::GetPluginPath();
-    std::vector< std::wstring > plugins = Path::ListFiles( dir, L".dll" );
+    std::vector< std::wstring > plugins = Path::ListFiles( dir, (const std::wstring & )L".dll" );
 
     for( std::wstring & file : plugins )
     {

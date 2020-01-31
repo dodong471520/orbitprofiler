@@ -26,6 +26,7 @@ EventTracer GEventTracer;
 //-----------------------------------------------------------------------------
 EventTracer::EventTracer() : m_SessionProperties( nullptr ), m_IsTracing( false )
 {
+	m_TraceHandle = INVALID_PROCESSTRACE_HANDLE;
 }
 
 //-----------------------------------------------------------------------------
@@ -84,17 +85,28 @@ void EventTracer::SetupStackTracing()
     }
 }
 
+static int Pad(int length)
+{
+	if (length / 8 * 8 != length)
+	{
+		return (length / 8 + 1) * 8;
+	}
+	return length;
+}
+
 //-----------------------------------------------------------------------------
 void EventTracer::Start()
 {
+	//return;
+	//CleanupTrace();
     EventTracing::Reset();
 
     if( !m_SessionProperties )
     {
-        ULONG BufferSize = sizeof( EVENT_TRACE_PROPERTIES ) + sizeof( KERNEL_LOGGER_NAME );
+        ULONG BufferSize = Pad(sizeof( EVENT_TRACE_PROPERTIES )) + Pad(sizeof( KERNEL_LOGGER_NAME ) + 1);
         m_SessionProperties = (EVENT_TRACE_PROPERTIES*)malloc( BufferSize );
         ZeroMemory( m_SessionProperties, BufferSize );
-        m_SessionProperties->LoggerNameOffset = sizeof( EVENT_TRACE_PROPERTIES );
+        m_SessionProperties->LoggerNameOffset = Pad(sizeof( EVENT_TRACE_PROPERTIES ));
 
         m_SessionProperties->EnableFlags = EVENT_TRACE_FLAG_THREAD; // ThreadGuid
 
@@ -156,14 +168,16 @@ void EventTracer::Start()
     LogFile.EventRecordCallback = (PEVENT_RECORD_CALLBACK)EventTracing::Callback;
 
     m_TraceHandle = OpenTrace(&LogFile);
-    if( m_TraceHandle == 0 )
+    if( m_TraceHandle == INVALID_PROCESSTRACE_HANDLE)
     {
         PrintLastError();
         return;
     }
 
-    std::thread* thread = new std::thread( [&](){ EventTracerThread(); } );
-    thread->detach();
+	m_Therad = new std::thread( [&](){ EventTracerThread(); } );
+	m_Therad->detach();
+    //std::thread* thread = new std::thread( [&](){ EventTracerThread(); } );
+    //thread->detach();
 }
 
 //-----------------------------------------------------------------------------
@@ -187,16 +201,30 @@ void EventTracer::Stop()
 //-----------------------------------------------------------------------------
 void EventTracer::CleanupTrace()
 {
-    if( ControlTrace( m_TraceHandle, KERNEL_LOGGER_NAME, m_SessionProperties, EVENT_TRACE_CONTROL_STOP ) != ERROR_SUCCESS )
-    {
-        PrintLastError();
-    }
+	if (m_Therad)
+	{
+		m_Therad->join();
+		delete m_Therad;
+		m_Therad = NULL;
+	}
 
-    if( CloseTrace( m_TraceHandle ) != ERROR_SUCCESS )
-    {
-        PrintLastError();
-    }
+	if (m_TraceHandle != INVALID_PROCESSTRACE_HANDLE)
+	{
+		if (ControlTrace(m_TraceHandle, KERNEL_LOGGER_NAME, m_SessionProperties, EVENT_TRACE_CONTROL_STOP) != ERROR_SUCCESS)
+		{
+			PrintLastError();
+		}
 
-    free( m_SessionProperties );
-    m_SessionProperties = nullptr;
+		if (CloseTrace(m_TraceHandle) != ERROR_SUCCESS)
+		{
+			PrintLastError();
+		}
+		CloseTrace(m_TraceHandle);
+	}
+
+	if (m_SessionProperties)
+	{
+		free(m_SessionProperties);
+		m_SessionProperties = nullptr;
+	}
 }

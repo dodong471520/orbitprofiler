@@ -6,6 +6,7 @@
 #include <string>
 #include <experimental/filesystem>
 #include <functional>
+#include <vector>
 
 class Path
 {

@@ -83,7 +83,7 @@ struct ThreadLocalData
     std::wstring                    m_ThreadName;
     std::vector<ReturnAddress>      m_ReturnAdresses;
     std::vector<Timer>              m_Timers;
-    std::vector<const Context*>     m_Contexts;
+    std::vector<Context>			m_Contexts;
     std::unordered_set<CallstackID> m_SentCallstacks;
     std::unordered_set<char*>       m_SentLiterals;
     std::unordered_set<char*>       m_SentActorNames;
@@ -400,7 +400,7 @@ void* Hijacking::Epilog()
     void * stackAddress = _AddressOfReturnAddress();
     EpilogContext* epilogContext = (EpilogContext*)((char*)stackAddress + s_StackOffset );
     
-    SendContext(TlsData->m_Contexts.back(), epilogContext);
+    SendContext(&TlsData->m_Contexts.back(), epilogContext);
     PopContext();
 
     void* ReturnAddress = TlsData->m_ReturnAdresses.back().m_OriginalReturnAddress;
@@ -427,7 +427,7 @@ void* Hijacking::EpilogZoneStop()
         timer.Stop();
 
         // Send string literal address as function address
-        const Context* context = TlsData->m_Contexts.back();
+        const Context* context = &TlsData->m_Contexts.back();
 #ifdef _WIN64
         char* zoneName = (char*)context->m_RCX.m_Ptr;
         timer.m_FunctionAddress = context->m_RCX.m_Reg64;
@@ -481,7 +481,7 @@ void* Hijacking::EpilogAlloc()
     Timer & timer = TlsData->m_Timers.back();
     timer.Stop();
 
-    const Context* prologContext = TlsData->m_Contexts.back();
+    const Context* prologContext = &TlsData->m_Contexts.back();
 
     timer.m_UserData[0] = epilogContext->GetReturnValue(); // Pointer
 
@@ -537,19 +537,20 @@ __forceinline FunctionArgInfo* Hijacking::GetArgInfo( void* a_Address )
 //-----------------------------------------------------------------------------
 __forceinline void Hijacking::PushContext( const Context* a_Context, void* a_OriginalFunction )
 {
-    TlsData->m_Contexts.push_back( a_Context );
-
+	 Context newContext;
     // Note: disabled argument tracking in favor of better perf.  It required work anyway, will re-enable.
-    // FunctionArgInfo* argInfo = GetArgInfo( a_OriginalFunction );
-    // context->m_StackSize = argInfo ? argInfo->m_NumStackBytes : 0;
-    // memcpy( context, a_Context, Context::GetFixedDataSize() + context->m_StackSize );
-    // context->m_RET = (AddressType)a_OriginalFunction;
+     FunctionArgInfo* argInfo = GetArgInfo( a_OriginalFunction );
+	 newContext.m_StackSize = argInfo ? argInfo->m_NumStackBytes : 0;
+     memcpy(&newContext, a_Context, Context::GetFixedDataSize() + newContext.m_StackSize );
+	 newContext.m_RET.m_Reg = (AddressType)a_OriginalFunction;
+
+	 TlsData->m_Contexts.push_back(newContext);
 }
 
 //-----------------------------------------------------------------------------
 __forceinline void Hijacking::PushZoneContext( const Context* a_Context, void* a_OriginalFunction )
 {
-    TlsData->m_Contexts.push_back( a_Context );
+    TlsData->m_Contexts.push_back( *a_Context );
 }
 
 //-----------------------------------------------------------------------------
@@ -559,10 +560,10 @@ __forceinline void Hijacking::PopContext()
 }
 
 //-----------------------------------------------------------------------------
-inline void Hijacking::SendContext( const Context * a_Context, EpilogContext* a_EpilogContext )
+inline void Hijacking::SendContext( const Context* a_Context, EpilogContext* a_EpilogContext )
 {
-#if 0
-    void* address = a_Context->GetRet();
+#if 1
+    void* address = (void*)a_Context->GetRet();
     FunctionArgInfo* argInfo = GetArgInfo( address );
     size_t argDataSize = argInfo ? argInfo->m_ArgDataSize : 0;
     std::vector<unsigned char> messageData( sizeof(SavedContext) + argDataSize );
@@ -586,7 +587,7 @@ inline void Hijacking::SendContext( const Context * a_Context, EpilogContext* a_
             // TODO: Argument tracking was hijacked by data tracking
             //       We should separate both concepts and revive argument
             //       tracking.
-            void* This = a_Context->GetThis();
+			void* This = (void*)a_Context->GetThis();
             void* data = (void*)( (char*)This + arg.m_Offset );
             memcpy( messageData.data() + offset, data, arg.m_NumBytes );
             offset += arg.m_NumBytes;

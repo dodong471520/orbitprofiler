@@ -757,7 +757,7 @@ void TimeGraph::SelectEvents( float a_WorldStart, float a_WorldEnd, ThreadID a_T
     }
     samplingProfiler->ProcessSamples();
 
-    if( samplingProfiler->GetNumSamples() > 0 )
+    //if( samplingProfiler->GetNumSamples() > 0 )
     {
         GOrbitApp->AddSelectionReport(samplingProfiler);
     }

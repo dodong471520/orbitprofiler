@@ -29,7 +29,7 @@ Params::Params() : m_LoadTypeInfo( true )
                  , m_AutoReleasePdb(false)
                  , m_MaxNumTimers( 1000000 )
                  , m_FontSize( 14.f )
-                 , m_Port(1789)
+                 , m_Port(1880)
                  , m_NumBytesAssembly(1024)
                  , m_DiffArgs("%1 %2")
 {

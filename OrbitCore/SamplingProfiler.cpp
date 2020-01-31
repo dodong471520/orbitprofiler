@@ -418,7 +418,7 @@ void SamplingProfiler::AddAddress( DWORD64 a_Address )
 	}
 
     std::wstring symName = symbol_info->Name;
-    if( symName == L"" )
+    //if( symName == L"" )
     {
         symName = Format( L"%I64x", a_Address );
         PRINT_VAR( GetLastErrorAsString() );

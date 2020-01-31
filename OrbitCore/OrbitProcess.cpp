@@ -408,7 +408,7 @@ void Process::FindPdbs( const std::vector< std::wstring > & a_SearchLocations )
     // Populate list of all available pdb files
     for( const std::wstring & dir : a_SearchLocations )
     {
-        std::vector< std::wstring > pdbFiles = Path::ListFiles( dir, L".pdb" );
+        std::vector< std::wstring > pdbFiles = Path::ListFiles( dir, (const std::wstring &)L".pdb" );
         for( const std::wstring & pdb : pdbFiles )
         {
             std::wstring pdbLower = Path::GetFileName( ToLower( pdb ) );
@@ -555,7 +555,7 @@ DWORD64 Process::GetRaiseExceptionAddress()
 //-----------------------------------------------------------------------------
 void Process::FindCoreFunctions()
 {
-#if 0
+#if 1
     SCOPE_TIMER_LOG(L"FindCoreFunctions");
 
     const auto prio = oqpi::task_priority::normal;

@@ -30,6 +30,7 @@
 #include "../../../OrbitAsm/OrbitAsmC.h"
 #include <stdio.h>
 #include <assert.h>
+#include <intrin.h>
 
 #ifndef ARRAYSIZE
     #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
@@ -279,7 +280,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #ifndef _MSC_VER
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
-        __movsb((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
+        __movsb((LPBYTE)ct->pTrampoline + newPos, (const unsigned char*)pCopySrc, copySize);
 #endif
         newPos += copySize;
         oldPos += hs.len;
@@ -530,7 +531,7 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
 #ifndef _MSC_VER
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
-        __movsb((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
+        __movsb((LPBYTE)ct->pTrampoline + newPos, (const unsigned char*)pCopySrc, copySize);
 #endif
         newPos += copySize;
         oldPos += hs.len;

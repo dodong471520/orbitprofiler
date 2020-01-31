@@ -100,7 +100,7 @@ bool Capture::Inject( bool a_WaitForConnection )
     if( a_WaitForConnection )
     {
         int numTries = 50;
-        while( !GTcpServer->HasConnection() && numTries-- > 0 )
+        while( !GTcpServer->HasConnection() /*&& numTries-- > 0*/ )
         {
             ORBIT_LOG( Format( "Waiting for connection on port %i", Capture::GCapturePort ) );
             Sleep(100);
@@ -367,6 +367,10 @@ void Capture::SendDataTrackingInfo()
     for( auto & pair : *GCoreApp->GetRules() )
     {
         const std::shared_ptr<Rule> rule = pair.second;
+		if (!rule.get())
+		{
+			continue;
+		}
         Function* func = rule->m_Function;
         Message msg( Msg_ArgTracking );
         ArgTrackingHeader & header = msg.m_Header.m_ArgTrackingHeader;

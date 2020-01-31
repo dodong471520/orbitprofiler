@@ -47,6 +47,7 @@ GlCanvas::GlCanvas()
 {
     m_TextRenderer.SetCanvas( this );
 
+	m_DeltaTime = 0;
     m_DesiredWorldWidth = 1600.f;
     m_DesiredWorldHeight = 1000.f;
     m_WorldWidth = m_DesiredWorldWidth;

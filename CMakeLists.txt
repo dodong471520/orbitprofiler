@@ -176,10 +176,10 @@ endif()
 add_subdirectory(OrbitCore)
 
 # 64 bits
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+#if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 add_subdirectory(OrbitGl)
 add_subdirectory(OrbitQt)
-endif()
+#endif()
 
 if(WIN32)
 # Startup Project

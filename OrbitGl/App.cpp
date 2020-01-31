@@ -401,7 +401,7 @@ void OrbitApp::LoadSymbolsFile()
 //-----------------------------------------------------------------------------
 void OrbitApp::ListSessions()
 {
-    std::vector< std::wstring > sessionFileNames = Path::ListFiles( Path::GetPresetPath(), L".opr" );
+    std::vector< std::wstring > sessionFileNames = Path::ListFiles( Path::GetPresetPath(), (const std::wstring & )L".opr" );
     std::vector< std::shared_ptr< Session > > sessions;
     for( std::wstring & fileName : sessionFileNames )
     {
