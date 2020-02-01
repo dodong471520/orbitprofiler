@@ -10,7 +10,7 @@ namespace EventTracing
 {
     typedef void( *EventCallback )( PEVENT_RECORD a_EventRecord, UCHAR a_Opcode );
 
-    void Callback                ( PEVENT_RECORD a_EventRecord );
+    void WINAPI Callback			( PEVENT_RECORD a_EventRecord );
     void CallbackALPC            ( PEVENT_RECORD a_EventRecord, UCHAR a_Opcode );
     void CallbackDiskIo          ( PEVENT_RECORD a_EventRecord, UCHAR a_Opcode );
     void CallbackEventTraceConfig( PEVENT_RECORD a_EventRecord, UCHAR a_Opcode );

@@ -26,7 +26,6 @@ EventTracer GEventTracer;
 //-----------------------------------------------------------------------------
 EventTracer::EventTracer() : m_SessionProperties( nullptr ), m_IsTracing( false )
 {
-	m_TraceHandle = INVALID_PROCESSTRACE_HANDLE;
 }
 
 //-----------------------------------------------------------------------------
@@ -97,8 +96,6 @@ static int Pad(int length)
 //-----------------------------------------------------------------------------
 void EventTracer::Start()
 {
-	//return;
-	//CleanupTrace();
     EventTracing::Reset();
 
     if( !m_SessionProperties )
@@ -168,16 +165,14 @@ void EventTracer::Start()
     LogFile.EventRecordCallback = (PEVENT_RECORD_CALLBACK)EventTracing::Callback;
 
     m_TraceHandle = OpenTrace(&LogFile);
-    if( m_TraceHandle == INVALID_PROCESSTRACE_HANDLE)
+    if( m_TraceHandle == 0 )
     {
         PrintLastError();
         return;
     }
 
-	m_Therad = new std::thread( [&](){ EventTracerThread(); } );
-	m_Therad->detach();
-    //std::thread* thread = new std::thread( [&](){ EventTracerThread(); } );
-    //thread->detach();
+    std::thread* thread = new std::thread( [&](){ EventTracerThread(); } );
+    thread->detach();
 }
 
 //-----------------------------------------------------------------------------
@@ -201,30 +196,16 @@ void EventTracer::Stop()
 //-----------------------------------------------------------------------------
 void EventTracer::CleanupTrace()
 {
-	if (m_Therad)
-	{
-		m_Therad->join();
-		delete m_Therad;
-		m_Therad = NULL;
-	}
+    if( ControlTrace( m_TraceHandle, KERNEL_LOGGER_NAME, m_SessionProperties, EVENT_TRACE_CONTROL_STOP ) != ERROR_SUCCESS )
+    {
+        PrintLastError();
+    }
 
-	if (m_TraceHandle != INVALID_PROCESSTRACE_HANDLE)
-	{
-		if (ControlTrace(m_TraceHandle, KERNEL_LOGGER_NAME, m_SessionProperties, EVENT_TRACE_CONTROL_STOP) != ERROR_SUCCESS)
-		{
-			PrintLastError();
-		}
+    if( CloseTrace( m_TraceHandle ) != ERROR_SUCCESS )
+    {
+        PrintLastError();
+    }
 
-		if (CloseTrace(m_TraceHandle) != ERROR_SUCCESS)
-		{
-			PrintLastError();
-		}
-		CloseTrace(m_TraceHandle);
-	}
-
-	if (m_SessionProperties)
-	{
-		free(m_SessionProperties);
-		m_SessionProperties = nullptr;
-	}
+    free( m_SessionProperties );
+    m_SessionProperties = nullptr;
 }

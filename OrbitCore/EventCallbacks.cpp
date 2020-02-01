@@ -54,7 +54,7 @@ void EventTracing::Init()
 }
 
 //-----------------------------------------------------------------------------
-void EventTracing::Callback( PEVENT_RECORD a_EventRecord )
+void WINAPI EventTracing::Callback( PEVENT_RECORD a_EventRecord )
 {
     if( Capture::GTargetProcess && Capture::IsCapturing() )
     {

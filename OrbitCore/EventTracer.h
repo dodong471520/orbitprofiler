@@ -35,7 +35,6 @@ protected:
     std::atomic<bool> m_IsTracing;
     _EVENT_TRACE_PROPERTIES* m_SessionProperties;
     EventBuffer m_EventBuffer;
-	std::thread* m_Therad;
 };
 
 extern EventTracer GEventTracer;
