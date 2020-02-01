@@ -413,7 +413,7 @@ void CaptureWindow::MiddleUp( int a_X, int a_Y )
     m_IsSelecting = false;
 
     m_SelectStop = Vec2( worldx, worldy );
-    //m_TimeGraph.SelectEvents( m_SelectStart[0], m_SelectStop[0], -1 );
+    m_TimeGraph.SelectEvents( m_SelectStart[0], m_SelectStop[0], -1 );
 
     NeedsRedraw();
 }
